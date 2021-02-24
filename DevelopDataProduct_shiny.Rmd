@@ -1,0 +1,140 @@
+---
+title: "Dimamonds_ FitModel with Shiny"
+author: "NT"
+date: "02/24/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# Instructions:
+This peer assessed assignment has two parts. First, you will create a Shiny application and deploy it on Rstudio's servers. 
+Second, you will use Slidify or Rstudio Presenter to prepare a reproducible pitch presentation about your application. 
+(more with README.md)
+
+## Reproducible Pitch
+ui.R and server.R file are included for reproducibility purpose.
+
+## The Shiny App_ Fit model(Linear Regression) 
+
+- URL: *https://github.com/Nhitruong20889/DevelopDataProject_Shiny*
+-All the files/code are in either .html or .pdf format.
+
+
+## Diamonds Dataset
+
+Diamonds Dataset: Format
+A data frame with 53940 rows and 10 variables
+
+## FitModel
+### here is the server.R
+```r
+library(shiny)
+library(datasets)
+library(ggplot2)
+library(plotly)
+ 
+prdt <- diamonds
+prdt$cut <- factor(prdt$cut, labels = c("Fair", "Good","Very Good","Premium","Ideal"), ordered = T)
+prdt$color <-factor(prdt$color, labels = c("J", "I","H","G", "F","E","D"), ordered = T)
+prdt$clarity <-factor(prdt$clarity, labels = c("I1", "SI2","SI1","VS2", "VS1","VVS2","VVS1","IF"), ordered = T)
+        modelt <- reactive({
+                paste("price ~", input$variable)
+        })
+        
+        modeltp <- reactive({
+                paste("price ~", "as.integer(", input$variable, ")")
+        })
+        
+        fitmod <- reactive({
+                lm(as.formula(modeltp()), data=prdt)
+        })
+        
+        output$caption <- renderText({ modelt() 
+        })
+        
+        output$prbplot <- renderPlot({
+                boxplot(as.formula(modelt()),data = prdt,
+                        outline = input$outliers)
+                 
+        })
+        
+        output$fitmod <- renderPrint({
+                summary(fitmod())
+        })
+        
+        output$prplot <- renderPlot({
+                with(prdt, {plot(as.formula(modeltp()))
+                           abline(fitmod(), col=5, size=8)
+                })
+        })
+```
+### And here is iu.R
+
+``` r
+library(shiny)
+shinyUI(
+        navbarPage("Shiny Application",
+                tabPanel("Analysis",
+                        fluidPage(
+                                titlePanel("The relationship between variables and Diamonds' prices"),
+                                sidebarLayout(
+                                        sidebarPanel(
+                                                selectInput("variable", "Input Variable:",
+                                                        c("The weight of diamonds" = "carat",
+                                                           "Diamonds color" = "color",
+                                                            "How clear of the diamonds"="clarity",
+                                                             "Quality of that cut"="cut",
+                                                              "Total depth percentage" = "depth",
+                                                               "Width of topof diamonds" = "table"
+                                                                  
+                                                                )),
+                                                    
+                                                checkboxInput("outliers", "Show BoxPlot's outliers", FALSE)
+                                            ),
+                                            
+                                            mainPanel(
+                                                    h3(textOutput("caption")),
+                                                    
+                                                    tabsetPanel(type = "tabs", 
+                                                                tabPanel("BoxPlot graph", plotOutput("prbplot")),
+                                                                tabPanel("Linear Regression model", 
+                                                                         plotOutput("prplot"),
+                                                                         verbatimTextOutput("fitmod")
+                                                                )
+                                                    )
+                                            )
+                                    )
+                            )
+                   ),
+                   
+                   tabPanel("Data detail",
+                            h2("Diamonds"),
+                            hr(),
+                            h3("Description"),
+                            helpText("TA dataset containing the prices and other attributes of almost 54,000 diamonds. The variables are as follows"),
+                                     
+                            h3("Format"),
+                            p("A data frame with 53940 observations on 10 variables."),
+                            
+                            p("  [, 1]   price   US dollars_ $326–$18,823"),
+                            p("  [, 2]	 carat	 weight of the diamond (0.2–5.01)"),
+                            p("  [, 3]	 cut	 quality of the cut (Fair, Good, Very Good, Premium, Ideal)"),
+                            p("  [, 4]	 color	 diamond colour, from D (best) to J (worst)"),
+                            p("  [, 5]	 clarity	 a measurement of how clear the diamond is (I1 (worst), SI2, SI1, VS2, VS1, VVS2, VVS1, IF (best))"),
+                            p("  [, 6]	 x	 length in mm (0–10.74)"),
+                            p("  [, 7]	 y	 width in mm (0–58.9)"),
+                            p("  [, 8]	 z	 depth in mm (0–31.8)"),
+                            p("  [, 9]	 depth	 total depth percentage = z / mean(x, y) = 2 * z / (x + y) (43–79)"),
+                            p("  [,10]	 table	 width of top of diamond relative to widest point (43–95)"),
+                            
+                   ),
+           
+                   tabPanel("My Github repository",
+                            a("https://github.com/Nhitruong20889/DevelopDataProject_Shiny"),
+                            hr(),
+                            h4("The repository is Develop Data Products Project_Shiny")
+                   )        
+        )
+)
+```
